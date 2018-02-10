@@ -6,8 +6,8 @@ import javax.imageio.*;
 /**
 This file represents an individual card. It has utilities for processing card 
 numbers and suits and also stores the image of the card. Note: {@code 0} is 
-Ace, {@code 1} is 2 ..., {@code 9} is 10, {@code 10} is Jack, {@code 11} is 
-Queen, and {@code 12} is King.
+2, {@code 1} is 3 ..., {@code 8} is 10, {@code 9} is Jack, {@code 10} is 
+Queen, and {@code 11} is King, and {@code 12} is Ace.
 */
 public class Card {
 
@@ -62,16 +62,16 @@ public class Card {
 	private String getImgPath(int n, int s){
 		String ret = IMGROOT;
 
-		n++;
+		n += 2;
 		switch(n){
-			case 1:
-				ret += "A"; break;
 			case 11:
 				ret += "J"; break;
 			case 12:
 				ret += "Q"; break;
 			case 13:
 				ret += "K"; break;
+			case 14:
+				ret += "A"; break;
 			default:
 				ret += n;
 		}

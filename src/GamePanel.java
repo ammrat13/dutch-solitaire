@@ -55,6 +55,12 @@ public class GamePanel extends JPanel {
 		for(int r=0; r<4; r++)
 			for(int c=0; c<13; c++)
 				cs[r][c] = ctemp.get(r*13+c);
+
+		// Find all the aces and swap them to their right position
+		for(int r=0; r<4; r++)
+			for(int c=0; c<13; c++)
+				if(cs[r][c].num == 12)
+					swap(r, c, cs[r][c].suit, 13);
 	}
 
 	/**
@@ -65,7 +71,20 @@ public class GamePanel extends JPanel {
 	@param cf The column of the empty space
 	*/
 	private void swap(int ri, int ci, int rf, int cf){
-		// TODO: implement swap code
+		try {
+			if(
+				((cs[ri][ci].num == 12 && cf == 13) // Aces can be swapped to the last row
+					|| (cs[ri][ci].num == 0 && cf == 0) // Twos can be swapped to the first row
+					|| (cs[ri][ci].num == cs[ri][ci+1].num - 1 && cs[ri][ci].suit == cs[ri+1][ci].suit) // Right order swap
+					|| (cs[ri][ci].num == cs[ri][ci-1].num + 1 && cs[ri][ci].suit == cs[ri-1][ci].suit)) // Left order swap
+				&& cs[rf][cf] == null	// End position is null
+			){
+				cs[rf][cf] = cs[ri][ci];
+				cs[ri][ci] = null; 
+			}
+		} catch(NullPointerException | IndexOutOfBoundsException  e){
+			e.printStackTrace();
+		}
 	}
 
 	/** {@inheritdoc} */
