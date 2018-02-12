@@ -45,7 +45,7 @@ public class Card {
 
 		BufferedImage temp = null;
 		try {
-			temp = ImageIO.read(new File(getImgPath(n, s)));
+			temp = ImageIO.read(new File(getImgPath()));
 		} catch (IOException e){
 			temp = new BufferedImage(100, 100, BufferedImage.TYPE_INT_ARGB);
 			e.printStackTrace();
@@ -59,9 +59,18 @@ public class Card {
 	@param s The suit of the card
 	@return The path to the image of that card
 	*/
-	private String getImgPath(int n, int s){
-		String ret = IMGROOT;
+	private String getImgPath(){
+		return IMGROOT + this.toString() + ".png";
+	}
 
+	/** {@inheritdoc} */
+	@Override
+	public String toString(){
+		String ret = "";
+		int n = num;
+		int s = suit;
+
+		// Number
 		n += 2;
 		switch(n){
 			case 11:
@@ -76,6 +85,7 @@ public class Card {
 				ret += n;
 		}
 
+		// Suit
 		switch(s){
 			case CLUBS:
 				ret += "C"; break;
@@ -86,8 +96,7 @@ public class Card {
 			case SPADES:
 				ret += "S"; break;
 		}
-		ret += ".png";
-		
+
 		return ret;
 	}
 

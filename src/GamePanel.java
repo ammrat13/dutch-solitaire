@@ -1,4 +1,5 @@
 import java.awt.*;
+import java.awt.event.*;
 import java.io.*;
 import java.util.*;
 import javax.imageio.*;
@@ -8,7 +9,7 @@ import javax.swing.*;
 The {@code JPanel} that will contain the game itself. It will be responsible for
 the logic and whatnot for running the game.
 */
-public class GamePanel extends JPanel {
+public class GamePanel extends JPanel implements KeyListener {
 
 	/** The width of the panel. */
 	private final int WIDTH;
@@ -24,6 +25,14 @@ public class GamePanel extends JPanel {
 
 	/** Stores the cards we have on the table. */
 	Card[][] cs = new Card[4][14];
+
+	/** Row of the active card. */
+	int rAct = 0;
+	/** Column of the active card. */
+	int cAct = 0;
+
+	/** Stores the keys that are currently down so we don't count twice. */
+	Set<Integer> kDs = new HashSet<>();
 
 	/**
 	Constructs the panel itself.
@@ -43,7 +52,8 @@ public class GamePanel extends JPanel {
 		// Empty the current array. We only empty the last column as the rest 
 		//	will be overwritten
 		for(int r=0; r<4; r++)
-			cs[r][13] = null;
+			for(int c=0; c<14; c++)
+				cs[r][c] = null;
 
 
 		// Fill the array randomly
@@ -77,12 +87,12 @@ public class GamePanel extends JPanel {
 					|| (cs[ri][ci].num == 0 && cf == 0) // Twos can be swapped to the first row
 					|| (cs[ri][ci].num == cs[ri][ci+1].num - 1 && cs[ri][ci].suit == cs[ri+1][ci].suit) // Right order swap
 					|| (cs[ri][ci].num == cs[ri][ci-1].num + 1 && cs[ri][ci].suit == cs[ri-1][ci].suit)) // Left order swap
-				&& cs[rf][cf] == null	// End position is null
+				&& (cs[rf][cf] == null && cs[ri][ci] != null)	// End position is null, but start is not
 			){
 				cs[rf][cf] = cs[ri][ci];
 				cs[ri][ci] = null; 
 			}
-		} catch(NullPointerException | IndexOutOfBoundsException  e){
+		} catch(Exception e){
 			e.printStackTrace();
 		}
 	}
@@ -94,19 +104,47 @@ public class GamePanel extends JPanel {
 
 		// Draw the background
 		g2d.setColor(Color.WHITE);
-		g2d.drawRect(0, 0, WIDTH, HEIGHT);
+		g2d.fillRect(0, 0, WIDTH, HEIGHT);
 
 		// Draw the grid and the card
-		g2d.setColor(Color.BLACK);
-		int gW = (WIDTH - 2*MAR)/14;
-		int gH = (int) ((gW - 2*CMAR)*AR + 2*CMAR);
+		int gW = (int) (WIDTH - 2*MAR)/14;	// Width of the space
+		int gH = (int) ((gW - 2*CMAR)*AR + 2*CMAR);	// Height of the space
 		for(int r=0; r<4; r++){
 			for(int c=0; c<14; c++){
+				// Draw the border
+				g2d.setColor(Color.BLACK);
 				g2d.drawRect(c*gW + MAR, r*gH + MAR, gW, gH);
+				// Draw a highlight if it is active
+				g2d.setColor(Color.BLUE);
+				if(r == rAct && c == cAct)
+					g2d.fillRect(c*gW + MAR + 1, r*gH + MAR + 1, gW - 1, gH - 1);
+				// Draw the card if it exists
 				if(cs[r][c] != null)
 					g2d.drawImage(cs[r][c].img, c*gW + MAR + CMAR, r*gH + MAR + CMAR, gW - 2*CMAR, gH - 2*CMAR, null, null);
 			}
 		}
+	}
+
+	/** {@inheritdoc} */
+	@Override
+	public void keyPressed(KeyEvent e){
+		if(e.getKeyCode() == KeyEvent.VK_ESCAPE && !kDs.contains(e.getKeyCode())){
+			kDs.add(e.getKeyCode());
+			reset();
+		}
+		repaint();
+	}
+
+	/** {@inheritdoc} */
+	@Override
+	public void keyReleased(KeyEvent e){
+		kDs.remove(e.getKeyCode());
+	}
+
+	/** {@inheritdoc} */
+	@Override
+	public void keyTyped(KeyEvent e){
+
 	}
 
 }
