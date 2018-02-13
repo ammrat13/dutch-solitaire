@@ -86,21 +86,18 @@ public class GamePanel extends JPanel implements KeyListener {
 	@param cf The column of the empty space
 	*/
 	private void swap(int ri, int ci, int rf, int cf){
-		try{
-			System.out.println(cs[ri][ci]);
-			System.out.println(cs[rf][cf+1]);
-			System.out.println(cs[rf][cf-1]);
-		} catch(Exception e){}
 		try {
-			if(
-				((cs[ri][ci].num == 12 && cf == 13) // Aces can be swapped to the last row
-					|| (cs[ri][ci].num == 0 && cf == 0) // Twos can be swapped to the first row
-					|| (cs[ri][ci].num == cs[rf][cf+1].num - 1 && cs[ri][ci].suit == cs[rf][cf+1].suit) // Right order swap
-					|| (cs[ri][ci].num == cs[rf][cf-1].num + 1 && cs[ri][ci].suit == cs[rf][cf-1].suit)) // Left order swap
-				&& (cs[rf][cf] == null && cs[ri][ci] != null)	// End position is null, but start is not
-			){
-				cs[rf][cf] = cs[ri][ci];
-				cs[ri][ci] = null; 
+			// Make sure the first one is not null but the second is
+			if(cs[ri][ci] != null && cs[rf][cf] == null){
+				// All the swap conditions
+				if( (cs[ri][ci].num == 12 && cf == 13) // Aces can be swapped to the last row
+				||	(cs[ri][ci].num == 0 && cf == 0) // Twos can be swapped to the first row
+				||	(cs[rf][cf+1] != null && cs[ri][ci].num == cs[rf][cf+1].num - 1 && cs[ri][ci].suit == cs[rf][cf+1].suit) // Right order swap
+				||	(cs[rf][cf-1] != null && cs[ri][ci].num == cs[rf][cf-1].num + 1 && cs[ri][ci].suit == cs[rf][cf-1].suit) // Left order swap
+				){
+					cs[rf][cf] = cs[ri][ci];
+					cs[ri][ci] = null; 
+				}
 			}
 		} catch(Exception e){
 			e.printStackTrace();
@@ -144,6 +141,10 @@ public class GamePanel extends JPanel implements KeyListener {
 	public void keyPressed(KeyEvent e){
 		if(isKeyPressed(e, KeyEvent.VK_ESCAPE)){
 			reset();
+		}
+		if(isKeyPressed(e, KeyEvent.VK_BACK_SPACE)){
+			rSel = -1;
+			cSel = -1;
 		}
 
 		if(isKeyPressed(e, KeyEvent.VK_UP)){
