@@ -95,9 +95,10 @@ public class GamePanel extends JPanel implements MouseListener {
 	private void swap(int ri, int ci, int rf, int cf){
 		try {
 			// Make sure the first one is not null but the second is
-			if(cs[ri][ci] != null && cs[rf][cf] == null){
+			// Last row cannot be swapped from
+			if(cs[ri][ci] != null && cs[rf][cf] == null && ci != 13){
 				// All the swap conditions
-				if( (cs[ri][ci].num == 12 && cf == 13) // Aces can be swapped to the last row
+				if(	(cs[ri][ci].num == 12 && cf == 13) // Aces can be swapped to the last row
 				||	(cs[ri][ci].num == 0 && cf == 0) // Twos can be swapped to the first row
 				||	(cs[rf][cf+1] != null && cs[ri][ci].num == cs[rf][cf+1].num - 1 && cs[ri][ci].suit == cs[rf][cf+1].suit) // Right order swap
 				||	(cs[rf][cf-1] != null && cs[ri][ci].num == cs[rf][cf-1].num + 1 && cs[ri][ci].suit == cs[rf][cf-1].suit) // Left order swap
