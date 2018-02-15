@@ -4,7 +4,7 @@
 
 cd src
 
-javac Main.java -d ../out
+javac Main.java -d ../out -Xdiags:verbose
 
 if [[ $? == 0 ]]
 then

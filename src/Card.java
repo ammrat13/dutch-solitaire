@@ -64,6 +64,11 @@ public class Card {
 	}
 
 	/** {@inheritdoc} */
+	public boolean equals(Card that){
+		return this.num == that.num && this.suit == that.suit;
+	}
+
+	/** {@inheritdoc} */
 	@Override
 	public String toString(){
 		String ret = "";

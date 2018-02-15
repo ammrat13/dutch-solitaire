@@ -14,7 +14,7 @@ public class Main {
 		JFrame frame = new JFrame();
 
 		GamePanel gp = new GamePanel(WIDTH, HEIGHT);
-		gp.addKeyListener(gp);
+		gp.addMouseListener(gp);
 		gp.setFocusable(true);
 		frame.add(gp);
 

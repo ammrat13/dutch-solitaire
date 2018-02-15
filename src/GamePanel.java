@@ -9,7 +9,7 @@ import javax.swing.*;
 The {@code JPanel} that will contain the game itself. It will be responsible for
 the logic and whatnot for running the game.
 */
-public class GamePanel extends JPanel implements KeyListener {
+public class GamePanel extends JPanel implements MouseListener {
 
 	/** The width of the panel. */
 	private final int WIDTH;
@@ -23,21 +23,21 @@ public class GamePanel extends JPanel implements KeyListener {
 	/** The margin around each card in pixels. */
 	private final int CMAR = 5;
 
-	/** Stores the cards we have on the table. */
-	Card[][] cs = new Card[4][14];
+	/** The width of a grid space */
+	private final int GW;
+	/** The height of a grid space */
+	private final int GH;
 
-	/** Row of the active card. */
-	int rAct = 0;
-	/** Column of the active card. */
-	int cAct = 0;
+	/** Stores the cards we have on the table. */
+	private Card[][] cs = new Card[4][14];
 
 	/** Row of the selected card. Negative one if no card is selected. */
-	int rSel = -1;
+	private int rSel = -1;
 	/** Column of the selected card. Negative one if no card is selected. */
-	int cSel = -1;
+	private int cSel = -1;
 
-	/** Stores the keys that are currently down so we don't count twice. */
-	Set<Integer> kDs = new HashSet<>();
+	/** Stores if we have won yet. */
+	private boolean won = true;
 
 	/**
 	Constructs the panel itself.
@@ -47,6 +47,10 @@ public class GamePanel extends JPanel implements KeyListener {
 	public GamePanel(int w, int h){
 		WIDTH = w;
 		HEIGHT = h;
+
+		GW = (int) (WIDTH - 2*MAR)/14;
+		GH = (int) ((GW - 2*CMAR)*AR + 2*CMAR);
+
 		reset();
 	}
 
@@ -54,28 +58,31 @@ public class GamePanel extends JPanel implements KeyListener {
 	Resets the game. Resuffles the deck and redeals the cards.
 	*/
 	private void reset(){
-		// Empty the current array. We only empty the last column as the rest 
-		//	will be overwritten
-		for(int r=0; r<4; r++)
-			for(int c=0; c<14; c++)
-				cs[r][c] = null;
+		won = false;
 
+		do{
+			// Empty the current array. We only empty the last column as the rest 
+			//	will be overwritten
+			for(int r=0; r<4; r++)
+				for(int c=0; c<14; c++)
+					cs[r][c] = null;
 
-		// Fill the array randomly
-		ArrayList<Card> ctemp = new ArrayList<Card>();
-		for(int n=0; n<13; n++)
-			for(int s=0; s<4; s++)
-				ctemp.add(new Card(n, s));
-		Collections.shuffle(ctemp);
-		for(int r=0; r<4; r++)
-			for(int c=0; c<13; c++)
-				cs[r][c] = ctemp.get(r*13+c);
+			// Fill the array randomly
+			ArrayList<Card> ctemp = new ArrayList<Card>();
+			for(int n=0; n<13; n++)
+				for(int s=0; s<4; s++)
+					ctemp.add(new Card(n, s));
+			Collections.shuffle(ctemp);
+			for(int r=0; r<4; r++)
+				for(int c=0; c<13; c++)
+					cs[r][c] = ctemp.get(r*13+c);
 
-		// Find all the aces and swap them to their right position
-		for(int r=0; r<4; r++)
-			for(int c=0; c<13; c++)
-				if(cs[r][c].num == 12)
-					swap(r, c, cs[r][c].suit, 13);
+			// Find all the aces and swap them to their right position
+			for(int r=0; r<4; r++)
+				for(int c=0; c<13; c++)
+					if(cs[r][c].num == 12)
+						swap(r, c, cs[r][c].suit, 13);
+		} while(hasWon());
 	}
 
 	/**
@@ -114,60 +121,44 @@ public class GamePanel extends JPanel implements KeyListener {
 		g2d.fillRect(0, 0, WIDTH, HEIGHT);
 
 		// Draw the grid and the card
-		int gW = (int) (WIDTH - 2*MAR)/14;	// Width of the space
-		int gH = (int) ((gW - 2*CMAR)*AR + 2*CMAR);	// Height of the space
 		for(int r=0; r<4; r++){
 			for(int c=0; c<14; c++){
 				// Draw the border
 				g2d.setColor(Color.BLACK);
-				g2d.drawRect(c*gW + MAR, r*gH + MAR, gW, gH);
+				g2d.drawRect(c*GW + MAR, r*GH + MAR, GW, GH);
 				// Draw a highlight if it is selected
 				g2d.setColor(Color.RED);
 				if(r == rSel && c == cSel)
-					g2d.fillRect(c*gW + MAR + 1, r*gH + MAR + 1, gW - 1, gH - 1);
-				// Draw a highlight if it is active
-				g2d.setColor(Color.BLUE);
-				if(r == rAct && c == cAct)
-					g2d.fillRect(c*gW + MAR + 1, r*gH + MAR + 1, gW - 1, gH - 1);
+					g2d.fillRect(c*GW + MAR + 1, r*GH + MAR + 1, GW - 1, GH - 1);
 				// Draw the card if it exists
 				if(cs[r][c] != null)
-					g2d.drawImage(cs[r][c].img, c*gW + MAR + CMAR, r*gH + MAR + CMAR, gW - 2*CMAR, gH - 2*CMAR, null, null);
+					g2d.drawImage(cs[r][c].img, c*GW + MAR + CMAR, r*GH + MAR + CMAR, GW - 2*CMAR, GH - 2*CMAR, null, null);
 			}
 		}
+
+		// Draw the win phrase
+		g2d.setColor(Color.BLACK);
+		g2d.setFont(new Font(null, Font.BOLD, 50));
+		if(won)
+			g2d.drawString("You Win", WIDTH/2-110, MAR + 4*GH + MAR + 30);
 	}
 
 	/** {@inheritdoc} */
 	@Override
-	public void keyPressed(KeyEvent e){
-		if(isKeyPressed(e, KeyEvent.VK_ESCAPE)){
-			reset();
-		}
-		if(isKeyPressed(e, KeyEvent.VK_BACK_SPACE)){
-			rSel = -1;
-			cSel = -1;
-		}
-
-		if(isKeyPressed(e, KeyEvent.VK_UP)){
-			rAct = Math.max(rAct-1, 0);
-		}
-		if(isKeyPressed(e, KeyEvent.VK_DOWN)){
-			rAct = Math.min(rAct+1, 3);
-		}
-		if(isKeyPressed(e, KeyEvent.VK_LEFT)){
-			cAct = Math.max(cAct-1, 0);
-		}
-		if(isKeyPressed(e, KeyEvent.VK_RIGHT)){
-			cAct = Math.min(cAct+1, 13);
-		}
-
-		if(isKeyPressed(e, KeyEvent.VK_ENTER)){
+	public void mouseClicked(MouseEvent e){
+		// The cell that was clicked on
+		Point cell = getGridPos(e.getPoint());
+		if(cell != null && !won){
 			if(rSel < 0 || cSel < 0){
-				rSel = rAct;
-				cSel = cAct;
+				rSel = cell.y;
+				cSel = cell.x;
 			} else {
-				swap(rSel, cSel, rAct, cAct);
+				swap(rSel, cSel, cell.y, cell.x);
 				rSel = -1;
 				cSel = -1;
+
+				if(hasWon())
+					won = true;
 			}
 		}
 
@@ -176,29 +167,58 @@ public class GamePanel extends JPanel implements KeyListener {
 
 	/** {@inheritdoc} */
 	@Override
-	public void keyReleased(KeyEvent e){
-		kDs.remove(e.getKeyCode());
+	public void mouseEntered(MouseEvent e){
+
 	}
 
 	/** {@inheritdoc} */
 	@Override
-	public void keyTyped(KeyEvent e){
+	public void mouseExited(MouseEvent e){
+
+	}
+
+	/** {@inheritdoc} */
+	@Override
+	public void mousePressed(MouseEvent e){
+
+	}
+
+	/** {@inheritdoc} */
+	@Override
+	public void mouseReleased(MouseEvent e){
 
 	}
 
 	/**
-	Handles the logic of checking if a key is pressed. Also adds the key to the 
-	set of pressed keys if it is pressed.
-	@param e The key event
-	@param k The key to check
-	@return If the key is pressed and hasn't triggered yet
+	This method takes in a {@code Point} representing a clicked coordinate and 
+	returns a point with the row and column of the grid posiyion that was 
+	clicked. This method returns {@code null} if no grid cell was clicked.
+	@param p The coordinate clicked
+	@return A {@code Point} representing the row and column of the cell clicked
 	*/
-	private boolean isKeyPressed(KeyEvent e, int k){
-		if(e.getKeyCode() == k && !kDs.contains(e.getKeyCode())){
-			kDs.add(e.getKeyCode());
-			return true;
-		}
-		return false;
+	private Point getGridPos(Point p){
+		if(p.x < MAR || p.x > 14*GW + MAR)
+			return null;
+		if(p.y < MAR || p.y > 4*GH + MAR)
+			return null;
+
+		return new Point(
+			(p.x - MAR)/GW,
+			(p.y - MAR)/GH
+		);
+	}
+
+	/**
+	Determines whether the player has won. It compares the current layout to 
+	determine whether the cards are in the winning position.
+	@return If the player has won then {@code true}, otherwise {@code false}
+	*/
+	private boolean hasWon(){
+		for(int r=1; r<14; r++)
+			for(int c=0; c<4; c++)
+				if(!cs[r][c].equals(new Card(r-1,c)))
+					return false;
+		return true;
 	}
 
 }
